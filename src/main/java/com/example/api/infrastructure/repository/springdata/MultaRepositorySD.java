@@ -20,4 +20,6 @@ public interface MultaRepositorySD extends JpaRepository<Multa, Long> {
             "AND m.statusPagamento = 'PENDENTE'")
     Double calcularTotalDividas(@Param("usuarioId") Long usuarioId);
 
+    List<Multa> findByUsuario_Id(Long usuarioId);
 }
+

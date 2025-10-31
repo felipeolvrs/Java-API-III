@@ -7,6 +7,5 @@ import java.util.Optional;
 public interface UsuarioRepositoryInterface {
 
     Optional<Usuario> findByNome(String nome);
-
     boolean existsByDividasGreaterThan(double valorMinimo);
 }

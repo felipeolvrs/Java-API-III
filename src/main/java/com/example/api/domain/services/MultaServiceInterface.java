@@ -7,7 +7,6 @@ import java.util.List;
 public interface MultaServiceInterface extends BaseServiceInterface<Multa, Long> {
 
     List<Multa> consultarMultasPorUsuario(Long usuarioId);
-
     Multa registrarMulta(Long emprestimoId, long diasAtraso, double valorDiario);
 
 }

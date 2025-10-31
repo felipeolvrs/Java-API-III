@@ -3,7 +3,6 @@ package com.example.api.presentation.controllers;
 import com.example.api.domain.models.Usuario;
 import com.example.api.domain.services.UsuarioServiceInterface;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -19,11 +18,11 @@ public class UsuarioController {
 
     @GetMapping
     public List<Usuario> getAll(){
-        return  usuarioService.getAll();
+        return  usuarioService.findAll();
     }
 
     @GetMapping("/{id}")
-    public Optional<Usuario> getById(@PathVariable long id) { return usuarioService.getById(id); }
+    public Optional<Usuario> getById(@PathVariable long id) { return usuarioService.findById(id); }
 
     @PostMapping()
     public Usuario create(@RequestBody Usuario usuario) {

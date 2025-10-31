@@ -19,15 +19,14 @@ public class MultaController{
 
     @GetMapping
     public List<Multa> getAll(){
-        return  multaService.getAll();
+        return  multaService.findAll();
     }
 
     @GetMapping("/{id}")
-    public Optional<Multa> getById(@PathVariable long id) { return  multaService.getById(id); }
+    public Optional<Multa> getById(@PathVariable long id) { return  multaService.findById(id); }
 
     @PostMapping()
     public Multa create(@RequestBody Multa multa) {
         return multaService.save(multa);
     }
-
 }

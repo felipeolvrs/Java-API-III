@@ -23,7 +23,7 @@ public class Emprestimo {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
-//    @NotNull
+    @NotNull
     private Usuario usuario;
 
     @ManyToOne

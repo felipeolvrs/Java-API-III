@@ -9,8 +9,6 @@ import java.util.List;
 public interface MultaRepositoryInterface {
 
     List<Multa> findByUsuarioId(Long usuarioId);
-
     Double calcularTotalDividas(Long usuarioId);
-
     boolean existsByUsuarioAndStatusPagamento(Usuario usuario, StatusPagamento status);
 }

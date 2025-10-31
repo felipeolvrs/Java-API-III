@@ -1,12 +1,12 @@
 package com.example.api.exception;
 
-public class EstoqueInsuficienteException extends  RuntimeException{
+public class EstoqueInsuficienteException extends  RuntimeException {
 
-    public EstoqueInsuficienteException(String mensagem){
+    public EstoqueInsuficienteException(String mensagem) {
         super(mensagem);
     }
 
-    public EstoqueInsuficienteException(){
+    public EstoqueInsuficienteException() {
         super("Estoque insuficiente para realizar a operacão.");
     }
 }

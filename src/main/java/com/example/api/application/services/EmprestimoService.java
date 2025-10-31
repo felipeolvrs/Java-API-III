@@ -40,7 +40,7 @@ public class EmprestimoService extends BaseService<Emprestimo, Long> implements 
             UsuarioRepositorySD usuarioRepository,
             MultaRepositorySD multaRepository
     ) {
-        super(emprestimoRepository);
+        super(emprestimoRepository, "Emprestimo");
         this.emprestimoRepository = emprestimoRepository;
         this.itemRepository = itemRepository;
         this.usuarioRepository = usuarioRepository;

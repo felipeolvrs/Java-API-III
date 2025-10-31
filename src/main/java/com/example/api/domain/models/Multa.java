@@ -1,5 +1,4 @@
 package com.example.api.domain.models;
-
 import com.example.api.domain.enums.StatusPagamento;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
@@ -10,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -43,4 +43,7 @@ public class Multa {
     @Column(name = "status_pagamento")
     private StatusPagamento statusPagamento;
 
+    @NotNull
+    @Column(name = "data_multa")
+    private LocalDateTime dataMulta;
 }
