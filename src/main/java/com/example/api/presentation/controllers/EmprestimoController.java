@@ -2,43 +2,48 @@ package com.example.api.presentation.controllers;
 
 import com.example.api.domain.models.Emprestimo;
 import com.example.api.domain.services.EmprestimoServiceInterface;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/emprestimo")
+@RequestMapping("/api/v1/emprestimos")
 public class EmprestimoController {
 
-    private final EmprestimoServiceInterface  emprestimoService;
+    private final EmprestimoServiceInterface emprestimoService;
 
     public EmprestimoController(EmprestimoServiceInterface emprestimoService) {
         this.emprestimoService = emprestimoService;
     }
 
     @GetMapping
-    public List<Emprestimo> getAll(){
-        return  emprestimoService.findAll();
+    public ResponseEntity<List<Emprestimo>> getAll(){
+        return ResponseEntity.ok(emprestimoService.findAll());
     }
 
     @GetMapping("/{id}")
-    public Optional<Emprestimo> getById(@PathVariable long id) {
-        return  emprestimoService.findById(id);
+    public ResponseEntity<Emprestimo> getById(@PathVariable long id) {
+        return emprestimoService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping()
-    public Emprestimo create(@RequestBody Emprestimo emprestimo) {
-        return emprestimoService.criarEmprestimo(emprestimo);
+    @PostMapping
+    public ResponseEntity<Emprestimo> create(@RequestBody @Valid Emprestimo emprestimo) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(emprestimoService.criarEmprestimo(emprestimo));
     }
 
     @PostMapping("/{id}/renovar")
-    public Emprestimo renovar(@PathVariable Long id) {
-        return emprestimoService.renovarEmprestimo(id);
+    public ResponseEntity<Emprestimo> renovar(@PathVariable Long id) {
+        return ResponseEntity.ok(emprestimoService.renovarEmprestimo(id));
     }
 
     @PostMapping("/{id}/devolver")
-    public Emprestimo devolver(@PathVariable Long id) {
-
-        return emprestimoService.devolverEmprestimo(id);
+    public ResponseEntity<Emprestimo> devolver(@PathVariable Long id) {
+        return ResponseEntity.ok(emprestimoService.devolverEmprestimo(id));
     }
 }

@@ -3,8 +3,10 @@ package com.example.api.application.services;
 import com.example.api.application.base.BaseService;
 import com.example.api.domain.models.Item;
 import com.example.api.domain.services.ItemServiceInterface;
+import com.example.api.exception.EstoqueInsuficienteException;
 import com.example.api.exception.RecursoExistenteException;
 import com.example.api.exception.RecursoNaoEncontradoException;
+import com.example.api.exception.RegraNegocioException;
 import com.example.api.infrastructure.repository.springdata.ItemRepositorySD;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +22,11 @@ public class ItemService extends BaseService<Item, Long> implements ItemServiceI
 
     @Override
     public Item criarItem(Item item) {
-
         if (itemRepository.findByNome(item.getNome()).isPresent())
             throw new RecursoExistenteException("Item já existe: " + item.getNome());
 
-        if (item.getEstoque() == null)
-            item.setEstoque(0);
+        if (item.getEstoque() < 0)
+            throw new RegraNegocioException("O estoque inicial não pode ser negativo.");
 
         return itemRepository.save(item);
     }
@@ -34,8 +35,8 @@ public class ItemService extends BaseService<Item, Long> implements ItemServiceI
         var item = itemRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item não encontrado com ID: " + id));
 
-        if (item.getQuantidade() > 0)
-            throw new RecursoExistenteException("Não é possível deletar item com estoque disponível.");
+        if (item.getEstoque() > 0)
+            throw new RegraNegocioException("Não é possível deletar um item que ainda possui estoque físico.");
 
         itemRepository.delete(item);
     }
@@ -52,7 +53,7 @@ public class ItemService extends BaseService<Item, Long> implements ItemServiceI
     @Override
     public Item atualizar(Long id, Integer novaQuantidade) {
         if (novaQuantidade < 0)
-            throw new RuntimeException("Estoque não pode ser negativo.");
+            throw new RegraNegocioException("Estoque não pode ser negativo.");
 
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item não encontrado."));
@@ -69,7 +70,7 @@ public class ItemService extends BaseService<Item, Long> implements ItemServiceI
         int estoqueAtual = item.getEstoque();
 
         if (estoqueAtual < quantidade)
-            throw new RuntimeException("Estoque insuficiente para este empréstimo.");
+            throw new EstoqueInsuficienteException("Estoque insuficiente para realizar esta operação.");
 
         var novaQuantidade = estoqueAtual - quantidade;
         item.setEstoque(novaQuantidade);
@@ -78,6 +79,9 @@ public class ItemService extends BaseService<Item, Long> implements ItemServiceI
 
     @Override
     public Item aumentarEstoque(Long id, Integer quantidade) {
+        if (quantidade < 0)
+            throw new RegraNegocioException("A quantidade para adicionar deve ser positiva.");
+
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item não encontrado"));
 

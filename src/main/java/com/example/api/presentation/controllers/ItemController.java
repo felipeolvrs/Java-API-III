@@ -3,11 +3,13 @@ package com.example.api.presentation.controllers;
 import com.example.api.domain.models.Item;
 import com.example.api.application.services.ItemService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
-@RequestMapping("/itens")
+@RequestMapping("/api/v1/itens")
 public class ItemController {
 
     private final ItemService itemService;
@@ -17,34 +19,37 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<Item> getAll(){
-        return itemService.findAll();
+    public ResponseEntity<List<Item>> getAll(){
+        return ResponseEntity.ok(itemService.findAll());
     }
 
     @GetMapping("/{id}")
-    public Item getById(@PathVariable long id) {
-        return itemService.buscarPorId(id);
+    public ResponseEntity<Item> getById(@PathVariable long id) {
+        // Ajuste para lidar com possibilidade de null ou exception se preferir
+        return ResponseEntity.ok(itemService.buscarPorId(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Item create(@RequestBody Item item) {
-        return itemService.criarItem(item);
+    public ResponseEntity<Item> create(@RequestBody Item item) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(itemService.criarItem(item));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        //TODO: Fazer as validações do delete
         itemService.deletarItem(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/disponibilidade")
-    public int getDisponibilidade(@PathVariable Long id) {
-        return itemService.consultarDisponibilidade(id);
+    public ResponseEntity<Integer> getDisponibilidade(@PathVariable Long id) {
+        //TODO: Voltando a quantidade de estoque
+        return ResponseEntity.ok(itemService.consultarDisponibilidade(id));
     }
 
     @PutMapping("/{id}/estoque")
-    public Item updateEstoque(@PathVariable Long id, @RequestBody Integer novaQuantidade) {
-        return itemService.atualizar(id, novaQuantidade);
+    //TODO: Verificar
+    public ResponseEntity<Item> updateEstoque(@PathVariable Long id, @RequestBody Integer novaQuantidade) {
+        return ResponseEntity.ok(itemService.atualizar(id, novaQuantidade));
     }
 }

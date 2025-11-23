@@ -15,11 +15,12 @@ public interface MultaRepositorySD extends JpaRepository<Multa, Long> {
 
     List<Multa> findByUsuarioAndStatusPagamento(Usuario usuario, StatusPagamento status);
 
-    @Query("SELECT SUM(m.valor) FROM Multa m " +
+    @Query("SELECT COALESCE(SUM(m.valor), 0) FROM Multa m " +
             "WHERE m.usuario.id = :usuarioId " +
-            "AND m.statusPagamento = 'PENDENTE'")
-    Double calcularTotalDividas(@Param("usuarioId") Long usuarioId);
+            "AND m.statusPagamento = :status")
+    Double calcularTotalDividas(@Param("usuarioId") Long usuarioId, @Param("status") StatusPagamento status);
 
     List<Multa> findByUsuario_Id(Long usuarioId);
-}
 
+    boolean existsByEmprestimo_Id(Long emprestimoId);
+}

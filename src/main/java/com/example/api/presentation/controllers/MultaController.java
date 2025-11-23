@@ -3,14 +3,16 @@ package com.example.api.presentation.controllers;
 import com.example.api.application.services.MultaService;
 import com.example.api.domain.models.Multa;
 import com.example.api.domain.services.MultaServiceInterface;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/multa")
-public class MultaController{
+@RequestMapping("/api/v1/multas")
+public class MultaController {
+
     private final MultaServiceInterface multaService;
 
     public MultaController(MultaService multaService) {
@@ -18,15 +20,19 @@ public class MultaController{
     }
 
     @GetMapping
-    public List<Multa> getAll(){
-        return  multaService.findAll();
+    public ResponseEntity<List<Multa>> getAll(){
+        return ResponseEntity.ok(multaService.findAll());
     }
 
     @GetMapping("/{id}")
-    public Optional<Multa> getById(@PathVariable long id) { return  multaService.findById(id); }
+    public ResponseEntity<Multa> getById(@PathVariable long id) {
+        return multaService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-    @PostMapping()
-    public Multa create(@RequestBody Multa multa) {
-        return multaService.save(multa);
+    @PostMapping
+    public ResponseEntity<Multa> create(@RequestBody Multa multa) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(multaService.save(multa));
     }
 }

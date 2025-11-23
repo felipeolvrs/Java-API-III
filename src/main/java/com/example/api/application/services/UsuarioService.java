@@ -5,10 +5,13 @@ import com.example.api.domain.enums.StatusPagamento;
 import com.example.api.domain.models.Multa;
 import com.example.api.domain.models.Usuario;
 import com.example.api.domain.services.UsuarioServiceInterface;
+import com.example.api.exception.RegraNegocioException;
 import com.example.api.infrastructure.repository.springdata.MultaRepositorySD;
 import com.example.api.infrastructure.repository.springdata.UsuarioRepositorySD;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class UsuarioService extends BaseService<Usuario,  Long> implements UsuarioServiceInterface {
@@ -40,5 +43,37 @@ public class UsuarioService extends BaseService<Usuario,  Long> implements Usuar
         novaMulta.setStatusPagamento(StatusPagamento.PENDENTE);
 
         multaRepository.save(novaMulta);
+    }
+
+    @Override
+    public BigDecimal calcularTotalDivida(Long usuarioId) {
+        Usuario usuario = buscarPorId(usuarioId);
+
+        List<Multa> multasPendentes = multaRepository.findByUsuarioAndStatusPagamento(
+                usuario,
+                StatusPagamento.PENDENTE
+        );
+
+        return multasPendentes.stream()
+                .map(Multa::getValor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Override
+    @Transactional
+    public void quitarDividas(Long usuarioId) {
+        Usuario usuario = buscarPorId(usuarioId);
+
+        List<Multa> multasPendentes = multaRepository.findByUsuarioAndStatusPagamento(
+                usuario,
+                StatusPagamento.PENDENTE
+        );
+
+        if (multasPendentes.isEmpty())
+            throw new RegraNegocioException("O usuário não possui dívidas pendentes para quitar.");
+
+        multasPendentes.forEach(multa -> multa.setStatusPagamento(StatusPagamento.PAGO));
+
+        multaRepository.saveAll(multasPendentes);
     }
 }

@@ -3,9 +3,11 @@ package com.example.api.application.services;
 import com.example.api.application.base.BaseService;
 import com.example.api.domain.enums.StatusEmprestimo;
 import com.example.api.domain.enums.StatusPagamento;
+import com.example.api.domain.enums.StatusReserva;
 import com.example.api.domain.models.Emprestimo;
 import com.example.api.domain.models.Item;
 import com.example.api.domain.models.Multa;
+import com.example.api.domain.models.Reserva;
 import com.example.api.domain.models.Usuario;
 import com.example.api.domain.services.EmprestimoServiceInterface;
 import com.example.api.exception.EstoqueInsuficienteException;
@@ -15,6 +17,7 @@ import com.example.api.exception.UsuarioComDividaException;
 import com.example.api.infrastructure.repository.springdata.EmprestimoRepositorySD;
 import com.example.api.infrastructure.repository.springdata.ItemRepositorySD;
 import com.example.api.infrastructure.repository.springdata.MultaRepositorySD;
+import com.example.api.infrastructure.repository.springdata.ReservaRepositorySD;
 import com.example.api.infrastructure.repository.springdata.UsuarioRepositorySD;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 @Service
 public class EmprestimoService extends BaseService<Emprestimo, Long> implements EmprestimoServiceInterface {
@@ -30,6 +34,7 @@ public class EmprestimoService extends BaseService<Emprestimo, Long> implements 
     private final ItemRepositorySD itemRepository;
     private final UsuarioRepositorySD usuarioRepository;
     private final MultaRepositorySD multaRepository;
+    private final ReservaRepositorySD reservaRepository;
 
     private static final int MAX_RENOVACOES = 2;
     private static final BigDecimal MULTA_DIARIA = BigDecimal.valueOf(5.0);
@@ -38,13 +43,15 @@ public class EmprestimoService extends BaseService<Emprestimo, Long> implements 
             EmprestimoRepositorySD emprestimoRepository,
             ItemRepositorySD itemRepository,
             UsuarioRepositorySD usuarioRepository,
-            MultaRepositorySD multaRepository
+            MultaRepositorySD multaRepository,
+            ReservaRepositorySD reservaRepository
     ) {
         super(emprestimoRepository, "Emprestimo");
         this.emprestimoRepository = emprestimoRepository;
         this.itemRepository = itemRepository;
         this.usuarioRepository = usuarioRepository;
         this.multaRepository = multaRepository;
+        this.reservaRepository = reservaRepository;
     }
 
     @Override
@@ -63,6 +70,21 @@ public class EmprestimoService extends BaseService<Emprestimo, Long> implements 
 
         if (usuarioDevendo)
             throw new UsuarioComDividaException("Usuário possui dívidas e não pode realizar empréstimos.");
+
+        Optional<Reserva> reservaAtivaOpt = reservaRepository.findByItemAndStatus(
+                item,
+                StatusReserva.ATIVA
+        );
+
+        if (reservaAtivaOpt.isPresent()) {
+            Reserva reservaAtiva = reservaAtivaOpt.get();
+
+            if (!reservaAtiva.getUsuario().equals(usuario))
+                throw new RegraNegocioException("Este item está reservado para outro usuário.");
+
+            reservaAtiva.setStatus(StatusReserva.CONCLUIDA);
+            reservaRepository.save(reservaAtiva);
+        }
 
         if (item.getEstoque() <= 0)
             throw new EstoqueInsuficienteException("Item sem estoque disponível.");
@@ -120,12 +142,12 @@ public class EmprestimoService extends BaseService<Emprestimo, Long> implements 
         if (diasAtraso > 0) {
             BigDecimal valorMulta = MULTA_DIARIA.multiply(BigDecimal.valueOf(diasAtraso));
 
-            Multa multa = Multa.builder()
-                    .usuario(emprestimo.getUsuario())
-                    .emprestimo(emprestimo)
-                    .valor(valorMulta)
-                    .statusPagamento(StatusPagamento.PENDENTE)
-                    .build();
+            Multa multa = new Multa();
+                multa.setUsuario(emprestimo.getUsuario());
+                multa.setEmprestimo(emprestimo);
+                multa.setValor(valorMulta);
+                multa.setStatusPagamento(StatusPagamento.PENDENTE);
+                multa.setDataMulta(LocalDate.now().atStartOfDay());
 
             multaRepository.save(multa);
         }
